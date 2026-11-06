@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="gu">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,25 +8,34 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="top"><div class="brand">🪔 Ronak <span>Wish Maker</span></div><button id="adminToggle" class="outline">Admin</button></header>
+  <header class="top">
+    <div class="brand">🪔 Ronak <span>Wish Maker</span></div>
+    <div class="topActions">
+      <label class="languageLabel" for="languageSelect" data-i18n="language">Language</label>
+      <select id="languageSelect" class="languageSelect" aria-label="Choose language">
+        <option value="en">English</option><option value="gu">ગુજરાતી</option>
+      </select>
+      <button id="adminToggle" class="outline" data-i18n="admin">Admin</button>
+    </div>
+  </header>
   <main>
     <section id="wishView" class="hero">
       <div class="glow"></div>
-      <p class="eyebrow" id="festivalLabel">FESTIVE GREETINGS</p>
-      <h1 id="wishTitle">શુભ દિવાળી!</h1>
-      <h2 id="wishName">તમને અને તમારા પરિવારને</h2>
-      <p id="wishMessage">આ દિવાળી તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.</p>
+      <p class="eyebrow" id="festivalLabel" data-i18n="festiveGreetings">FESTIVE GREETINGS</p>
+      <h1 id="wishTitle">Happy Diwali!</h1>
+      <h2 id="wishName" data-i18n="familyGreeting">To you and your family</h2>
+      <p id="wishMessage">May this festival bring happiness, peace and prosperity.</p>
       <div class="media">
         <video id="wishVideo" controls playsinline hidden></video>
         <audio id="wishAudio" controls hidden></audio>
       </div>
       <div class="actions">
-        <button id="playVideo" hidden>▶ Video જુઓ</button>
-        <button id="playMusic" hidden>♫ ગીત સાંભળો</button>
+        <button id="playVideo" hidden data-i18n="playVideo">▶ Play Video</button>
+        <button id="playMusic" hidden data-i18n="playMusic">♫ Play Music</button>
       </div>
       <section class="thanks">
-        <h3>તમને આ Wish ગમી?</h3>
-        <input id="visitorName" maxlength="40" placeholder="તમારું નામ લખો">
+        <h3 data-i18n="likeWish">Did you like this wish?</h3>
+        <input id="visitorName" maxlength="40" data-i18n-placeholder="enterName" placeholder="Enter your name">
         <div id="reactions" class="reactions">
           <button data-emoji="❤️">❤️</button><button data-emoji="🙏">🙏</button>
           <button data-emoji="😍">😍</button><button data-emoji="🥳">🥳</button>
@@ -37,22 +46,32 @@
     </section>
 
     <section id="adminView" class="panel" hidden>
-      <div class="panelHead"><div><p class="eyebrow">CONTROL CENTER</p><h2>Admin Dashboard</h2></div><button id="closeAdmin" class="outline">Close</button></div>
-      <p class="notice">આ પ્રારંભિક build છે. હાલ data આ browser માં જ રહે છે. Firebase જોડ્યા પછી જ બધા device પર sync, cloud uploads અને સાચા visitor analytics મળશે.</p>
+      <div class="panelHead"><div><p class="eyebrow">CONTROL CENTER</p><h2 data-i18n="dashboard">Admin Dashboard</h2></div><button id="closeAdmin" class="outline" data-i18n="close">Close</button></div>
+      <p class="notice" data-i18n="localNotice">Starter build: data is stored only in this browser. Cloud sync, cross-device links and reliable visitor analytics need a secure backend.</p>
+      <h3 data-i18n="createWish">Create New Wish</h3>
       <div class="formGrid">
-        <label>વ્યક્તિનું નામ<input id="person" placeholder="જેમ કે Dhruvil"></label>
-        <label>Festival<select id="festival"><option>Happy Diwali</option><option>Happy Dhanteras</option><option>Happy Gujarati New Year</option></select></label>
-        <label>Wish title<input id="titleInput" value="શુભ દિવાળી!"></label>
-        <label>Wish message<textarea id="messageInput">આ તહેવાર તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.</textarea></label>
-        <label>ગીત (MP3)<input id="audioFile" type="file" accept="audio/*"></label>
-        <label>વિડિયો (20–30 sec)<input id="videoFile" type="file" accept="video/*"></label>
-        <label>Background image<input id="imageFile" type="file" accept="image/*"></label>
+        <label data-i18n="personName">Person's name<input id="person" placeholder="e.g. Dhruvil"></label>
+        <label data-i18n="festival">Festival<select id="festival"></select></label>
+        <label data-i18n="wishTitle">Wish title<input id="titleInput" value="Happy Diwali!"></label>
+        <label data-i18n="wishMessage">Wish message<textarea id="messageInput">May this festival bring happiness, peace and prosperity.</textarea></label>
+        <label data-i18n="songMp3">Song (MP3)<input id="audioFile" type="file" accept="audio/*"></label>
+        <label data-i18n="videoFile">Video<input id="videoFile" type="file" accept="video/*"></label>
+        <label data-i18n="backgroundImage">Background image<input id="imageFile" type="file" accept="image/*"></label>
       </div>
-      <div class="actions"><button id="saveWish">Save / Create Wish</button><button id="newWish" class="outline">New</button></div>
-      <h3>તમારી Wishes</h3><div id="wishList" class="wishList"></div>
-      <h3>Thank You Reactions</h3><div id="reactionList" class="wishList"></div>
-      <h3>Visitor Activity (આ device પર)</h3><div id="visitList" class="wishList"></div>
-      <p class="small">નોંધ: visitor નું નામ, page પર કેટલો સમય રહ્યો અને wish પૂરી જોઈ કે નહીં જેવી માહિતી માટે consent અને Firebase/backend tracking જરૂરી છે. આ demo કોઈને ગુપ્ત રીતે track કરતું નથી.</p>
+      <div class="actions"><button id="saveWish" data-i18n="saveWish">Save / Create Wish</button><button id="newWish" class="outline" data-i18n="new">New</button></div>
+      <h3 data-i18n="yourWishes">Your Wishes</h3><div id="wishList" class="wishList"></div>
+      <hr>
+      <h3 data-i18n="festivalManager">Festival Manager</h3>
+      <p class="small" data-i18n="festivalManagerHelp">The list includes major Hindu festivals and observances. Add regional festivals whenever you need.</p>
+      <div class="festivalAdd">
+        <input id="newFestival" maxlength="70" data-i18n-placeholder="festivalName" placeholder="Festival name">
+        <button id="addFestival" data-i18n="addFestival">Add Festival</button>
+      </div>
+      <div id="festivalList" class="wishList"></div>
+      <hr>
+      <h3 data-i18n="thankYouReactions">Thank You Reactions</h3><div id="reactionList" class="wishList"></div>
+      <h3 data-i18n="visitorActivity">Visitor Activity (this device only)</h3><div id="visitList" class="wishList"></div>
+      <p class="small" data-i18n="analyticsNotice">This demo does not secretly track visitors. Accurate cross-device analytics requires a consent-aware backend.</p>
     </section>
   </main>
   <footer>Made with ❤️ by Ronak</footer>
