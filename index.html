@@ -1,80 +1,89 @@
 <!doctype html>
-<html lang="en">
+<html lang="gu">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17120d">
+  <meta name="description" content="Ronak Wish Maker - festive greetings">
   <title>Ronak Wish Maker</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
-    <div class="brand">🪔 Ronak <span>Wish Maker</span></div>
-    <div class="topActions">
-      <label class="languageLabel" for="languageSelect" data-i18n="language">Language</label>
-      <select id="languageSelect" class="languageSelect" aria-label="Choose language">
-        <option value="en">English</option><option value="gu">ગુજરાતી</option>
-      </select>
-      <button id="adminToggle" class="outline" data-i18n="admin">Admin</button>
+    <a class="brand" href="./">🪔 Ronak <span>Wish Maker</span></a>
+    <div class="top-actions">
+      <button id="languageToggle" class="outline" type="button">English</button>
+      <button id="adminToggle" class="outline" type="button" data-i18n="admin">Admin</button>
     </div>
   </header>
+
   <main>
     <section id="wishView" class="hero">
       <div class="glow"></div>
-      <p class="eyebrow" id="festivalLabel" data-i18n="festiveGreetings">FESTIVE GREETINGS</p>
-      <h1 id="wishTitle">Happy Diwali!</h1>
-      <h2 id="wishName" data-i18n="familyGreeting">To you and your family</h2>
-      <p id="wishMessage">May this festival bring happiness, peace and prosperity.</p>
+      <p class="eyebrow" id="festivalLabel">FESTIVE GREETINGS</p>
+      <p class="template-tag" id="templateLabel">Royal Gold</p>
+      <h1 id="wishTitle">શુભ દિવાળી!</h1>
+      <h2 id="wishName">તમને અને તમારા પરિવારને</h2>
+      <p id="wishMessage">આ તહેવાર તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.</p>
       <div class="media">
         <video id="wishVideo" controls playsinline hidden></video>
         <audio id="wishAudio" controls hidden></audio>
       </div>
-      <div class="actions">
-        <button id="playVideo" hidden data-i18n="playVideo">▶ Play Video</button>
-        <button id="playMusic" hidden data-i18n="playMusic">♫ Play Music</button>
-      </div>
       <section class="thanks">
-        <h3 data-i18n="likeWish">Did you like this wish?</h3>
-        <input id="visitorName" maxlength="40" data-i18n-placeholder="enterName" placeholder="Enter your name">
-        <div id="reactions" class="reactions">
-          <button data-emoji="❤️">❤️</button><button data-emoji="🙏">🙏</button>
-          <button data-emoji="😍">😍</button><button data-emoji="🥳">🥳</button>
-          <button data-emoji="😎">😎</button><button data-emoji="😂">😂</button>
+        <h3 data-i18n="wishLike">તમને આ Wish ગમી?</h3>
+        <label class="sr-only" for="visitorName">તમારું નામ</label>
+        <input id="visitorName" maxlength="40" autocomplete="name" placeholder="તમારું નામ લખો">
+        <div id="reactions" class="reactions" aria-label="Thank you reactions">
+          <button type="button" data-emoji="❤️" aria-label="Love">❤️</button>
+          <button type="button" data-emoji="🙏" aria-label="Thank you">🙏</button>
+          <button type="button" data-emoji="😍" aria-label="Love it">😍</button>
+          <button type="button" data-emoji="🥳" aria-label="Celebrate">🥳</button>
+          <button type="button" data-emoji="😎" aria-label="Cool">😎</button>
+          <button type="button" data-emoji="😂" aria-label="Funny">😂</button>
         </div>
         <p id="thanksStatus" aria-live="polite"></p>
       </section>
     </section>
 
     <section id="adminView" class="panel" hidden>
-      <div class="panelHead"><div><p class="eyebrow">CONTROL CENTER</p><h2 data-i18n="dashboard">Admin Dashboard</h2></div><button id="closeAdmin" class="outline" data-i18n="close">Close</button></div>
-      <p class="notice" data-i18n="localNotice">Starter build: data is stored only in this browser. Cloud sync, cross-device links and reliable visitor analytics need a secure backend.</p>
+      <div class="panelHead">
+        <div><p class="eyebrow">CONTROL CENTER</p><h2 data-i18n="dashboard">Admin Dashboard</h2></div>
+        <button id="closeAdmin" class="outline" type="button" data-i18n="close">Close</button>
+      </div>
+      <p class="notice" data-i18n="localNotice">આ build માં માહિતી આ જ browser/device માં સેવ થાય છે. બીજા device પર share અને સાચી Admin સુરક્ષા માટે Firebase/backend setup જરૂરી છે.</p>
+
       <h3 data-i18n="createWish">Create New Wish</h3>
       <div class="formGrid">
-        <label data-i18n="personName">Person's name<input id="person" placeholder="e.g. Dhruvil"></label>
-        <label data-i18n="festival">Festival<select id="festival"></select></label>
-        <label data-i18n="wishTitle">Wish title<input id="titleInput" value="Happy Diwali!"></label>
-        <label data-i18n="wishMessage">Wish message<textarea id="messageInput">May this festival bring happiness, peace and prosperity.</textarea></label>
-        <label data-i18n="songMp3">Song (MP3)<input id="audioFile" type="file" accept="audio/*"></label>
-        <label data-i18n="videoFile">Video<input id="videoFile" type="file" accept="video/*"></label>
-        <label data-i18n="backgroundImage">Background image<input id="imageFile" type="file" accept="image/*"></label>
+        <label><span data-i18n="personName">વ્યક્તિનું નામ</span><input id="person" type="text" maxlength="80" placeholder="જેમ કે Rahul" autocomplete="off"></label>
+        <label><span data-i18n="festival">Festival</span>
+          <input id="festivalSearch" type="search" placeholder="Festival શોધો..." autocomplete="off">
+          <select id="festival" size="4" aria-label="Festival list"></select>
+        </label>
+        <label><span data-i18n="wishTitle">Wish title</span><input id="titleInput" type="text" maxlength="120" value="શુભેચ્છાઓ!"></label>
+        <label><span data-i18n="wishMessage">Wish message</span><textarea id="messageInput" rows="4" maxlength="1200">આ તહેવાર તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.</textarea></label>
+        <label><span data-i18n="template">Template</span><select id="templateSelect">
+          <option value="royal">Royal Gold</option><option value="festive">Colorful Festival</option><option value="minimal">Modern Minimal</option><option value="dark">Premium Dark</option>
+        </select></label>
+        <label><span data-i18n="customFestival">Custom Festival ઉમેરો</span><div class="inline-field"><input id="customFestivalName" type="text" maxlength="60" placeholder="નવા Festival નું નામ"><button id="addFestival" type="button">Add</button></div></label>
+        <label><span data-i18n="music">ગીત (Audio)</span><input id="audioFile" type="file" accept="audio/*"></label>
+        <label><span data-i18n="video">વિડિયો (Video)</span><input id="videoFile" type="file" accept="video/*"></label>
+        <label><span data-i18n="background">Background image</span><input id="imageFile" type="file" accept="image/*"></label>
       </div>
-      <div class="actions"><button id="saveWish" data-i18n="saveWish">Save / Create Wish</button><button id="newWish" class="outline" data-i18n="new">New</button></div>
-      <h3 data-i18n="yourWishes">Your Wishes</h3><div id="wishList" class="wishList"></div>
-      <hr>
-      <h3 data-i18n="festivalManager">Festival Manager</h3>
-      <p class="small" data-i18n="festivalManagerHelp">The list includes major Hindu festivals and observances. Add regional festivals whenever you need.</p>
-      <div class="festivalAdd">
-        <input id="newFestival" maxlength="70" data-i18n-placeholder="festivalName" placeholder="Festival name">
-        <button id="addFestival" data-i18n="addFestival">Add Festival</button>
+      <p class="small">Media size limits: audio 2 MB, video 8 MB, image 4 MB. આ demo માં media browser storage માં રહે છે.</p>
+      <div class="actions">
+        <button id="saveWish" type="button" data-i18n="saveWish">Save / Create Wish</button>
+        <button id="newWish" class="outline" type="button" data-i18n="new">New</button>
       </div>
-      <div id="festivalList" class="wishList"></div>
-      <hr>
-      <h3 data-i18n="thankYouReactions">Thank You Reactions</h3><div id="reactionList" class="wishList"></div>
-      <h3 data-i18n="visitorActivity">Visitor Activity (this device only)</h3><div id="visitList" class="wishList"></div>
-      <p class="small" data-i18n="analyticsNotice">This demo does not secretly track visitors. Accurate cross-device analytics requires a consent-aware backend.</p>
+      <p id="adminStatus" class="status" aria-live="polite"></p>
+
+      <h3 data-i18n="yourWishes">તમારી Wishes</h3><div id="wishList" class="wishList"></div>
+      <h3 data-i18n="reactions">Thank You Reactions</h3><div id="reactionList" class="wishList"></div>
+      <h3 data-i18n="visitorActivity">Visitor Activity</h3><div id="visitList" class="wishList"></div>
+      <p class="small" data-i18n="analyticsNotice">Visitor સમય browser અંદાજ છે. સાચા multi-device analytics અને consent management માટે backend જરૂરી છે.</p>
+      <div class="admin-footer"><span>Developer: <strong>Ronak Manani</strong></span><button id="clearLocalData" class="danger" type="button" data-i18n="clearData">Clear local data</button></div>
     </section>
   </main>
-  <footer>Made with ❤️ by Ronak</footer>
+  <footer>Made with ❤️ by <strong>Ronak Manani</strong></footer>
   <script src="app.js"></script>
 </body>
 </html>
