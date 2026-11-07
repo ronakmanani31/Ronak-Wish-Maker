@@ -2,241 +2,63 @@
 "use strict";
 const $ = id => document.getElementById(id);
 const KEYS = {wishes:"rwm_wishes_v2", reactions:"rwm_reactions_v2", visits:"rwm_visits_v2", festivals:"rwm_custom_festivals_v2"};
-const baseFestivals = [
-"Diwali","Dhanteras","Kali Chaudas","Gujarati New Year","Bhai Dooj","Holi","Dhuleti","Navratri","Durga Puja","Dussehra","Maha Shivratri","Ram Navami","Janmashtami","Ganesh Chaturthi","Hanuman Jayanti","Raksha Bandhan","Bhai Beej","Makar Sankranti","Uttarayan","Vasant Panchami","Saraswati Puja","Akshaya Tritiya","Guru Purnima","Nag Panchami","Rath Yatra","Onam","Pongal","Lohri","Chhath Puja","Karwa Chauth","Ahoi Ashtami","Hartalika Teej","Teej","Gudi Padwa","Ugadi","Vishu","Baisakhi","Bhai Phonta","Kartik Purnima","Dev Uthani Ekadashi","Tulsi Vivah","Prabodhini Ekadashi","Janai Purnima","Ganga Dussehra","Sheetala Saptami","Vat Savitri Vrat","Pradosh Vrat","Ekadashi","Purnima","Amavasya"
-];
+const baseFestivals = ["Diwali","Dhanteras","Kali Chaudas","Gujarati New Year","Bhai Dooj","Holi","Dhuleti","Navratri","Durga Puja","Dussehra","Maha Shivratri","Ram Navami","Janmashtami","Ganesh Chaturthi","Hanuman Jayanti","Raksha Bandhan","Bhai Beej","Makar Sankranti","Uttarayan","Vasant Panchami","Saraswati Puja","Akshaya Tritiya","Guru Purnima","Nag Panchami","Rath Yatra","Onam","Pongal","Lohri","Chhath Puja","Karwa Chauth","Ahoi Ashtami","Hartalika Teej","Teej","Gudi Padwa","Ugadi","Vishu","Baisakhi","Bhai Phonta","Kartik Purnima","Dev Uthani Ekadashi","Tulsi Vivah","Prabodhini Ekadashi","Janai Purnima","Ganga Dussehra","Sheetala Saptami","Vat Savitri Vrat","Pradosh Vrat","Ekadashi","Purnima","Amavasya"];
 const translations = {
-gu:{admin:"Admin",wishLike:"તમને આ Wish ગમી?",dashboard:"Admin Dashboard",close:"બંધ કરો",localNotice:"આ build માં માહિતી આ જ browser/device માં સેવ થાય છે. બીજા device પર share અને સાચી Admin સુરક્ષા માટે Firebase/backend setup જરૂરી છે.",createWish:"નવી Wish બનાવો",personName:"વ્યક્તિનું નામ",festival:"Festival",wishTitle:"Wish Title",wishMessage:"Wish Message",template:"Design Theme",customFestival:"Custom Festival ઉમેરો",music:"ગીત (Audio)",video:"વિડિયો (Video)",background:"Background Image",saveWish:"Save / Create Wish",new:"નવી",yourWishes:"તમારી Wishes",reactions:"Thank You Reactions",visitorActivity:"Visitor Activity",analyticsNotice:"Visitor સમય browser અંદાજ છે. સાચા multi-device analytics અને consent management માટે backend જરૂરી છે.",clearData:"Local Data સાફ કરો"},
-en:{admin:"Admin",wishLike:"Did you like this wish?",dashboard:"Admin Dashboard",close:"Close",localNotice:"This build stores data only in this browser/device. Firebase/backend is required for sharing across devices and real admin security.",createWish:"Create New Wish",personName:"Person's name",festival:"Festival",wishTitle:"Wish title",wishMessage:"Wish message",template:"Design theme",customFestival:"Add custom festival",music:"Music (Audio)",video:"Video clip",background:"Background image",saveWish:"Save / Create Wish",new:"New",yourWishes:"Your Wishes",reactions:"Thank You Reactions",visitorActivity:"Visitor Activity",analyticsNotice:"Visitor time is an approximate browser measurement. Backend is required for multi-device analytics and consent management.",clearData:"Clear local data"}
+gu:{admin:"Admin",wishLike:"તમને આ Wish ગમી?",dashboard:"Admin Dashboard",close:"બંધ કરો",localNotice:"Wishes હવે Firebase માંથી લોડ થાય છે. Admin ફેરફાર માટે સુરક્ષિત Login જરૂરી છે.",createWish:"નવી Wish બનાવો",personName:"વ્યક્તિનું નામ",festival:"Festival",wishTitle:"Wish Title",wishMessage:"Wish Message",template:"Design Theme",customFestival:"Custom Festival ઉમેરો",music:"ગીત (Audio)",video:"વિડિયો (Video)",background:"Background Image",saveWish:"Save / Create Wish",new:"નવી",yourWishes:"તમારી Wishes",reactions:"Thank You Reactions",visitorActivity:"Visitor Activity",analyticsNotice:"Visitor activity આ Website ના browser sessions પરથી નોંધાય છે.",clearData:"આ બ્રાઉઝરનો Local Data સાફ કરો"},
+en:{admin:"Admin",wishLike:"Did you like this wish?",dashboard:"Admin Dashboard",close:"Close",localNotice:"Wishes are loaded from Firebase. Secure login is required for admin changes.",createWish:"Create New Wish",personName:"Person's name",festival:"Festival",wishTitle:"Wish title",wishMessage:"Wish message",template:"Design theme",customFestival:"Add custom festival",music:"Music (Audio)",video:"Video clip",background:"Background image",saveWish:"Save / Create Wish",new:"New",yourWishes:"Your Wishes",reactions:"Thank You Reactions",visitorActivity:"Visitor Activity",analyticsNotice:"Visitor activity is recorded from website browser sessions.",clearData:"Clear this browser’s local data"}
 };
-let language = localStorage.getItem("rwm_language") || "gu";
-let wishes = safeRead(KEYS.wishes, []);
-let reactions = safeRead(KEYS.reactions, []);
-let visits = safeRead(KEYS.visits, []);
-let customFestivals = safeRead(KEYS.festivals, []);
-let currentId = new URLSearchParams(location.search).get("wish");
-let startedAt = Date.now(), visibleSince = document.visibilityState === "visible" ? Date.now() : null;
-let activeSeconds = 0, completionRecorded = false;
-function safeRead(key, fallback){try{const value=JSON.parse(localStorage.getItem(key));return Array.isArray(value)?value:fallback}catch{return fallback}}
-const VIDEO_DB_NAME = "ronakWishMakerMedia";
-const VIDEO_STORE = "videos";
-function openMediaDB(){
-  return new Promise((resolve,reject)=>{
-    if(!("indexedDB" in window)){reject(new Error("આ browser માં IndexedDB ઉપલબ્ધ નથી."));return}
-    const request=indexedDB.open(VIDEO_DB_NAME,1);
-    request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(VIDEO_STORE))db.createObjectStore(VIDEO_STORE)};
-    request.onsuccess=()=>resolve(request.result);
-    request.onerror=()=>reject(new Error("Video storage ખોલી શકાયું નથી."));
-  });
-}
-async function saveVideoBlob(key,blob){
-  const db=await openMediaDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(VIDEO_STORE,"readwrite");
-    tx.objectStore(VIDEO_STORE).put(blob,key);
-    tx.oncomplete=()=>{db.close();resolve(true)};
-    tx.onerror=()=>{db.close();reject(new Error("Video સેવ થઈ શક્યો નથી. Browser storage ખાલી કરો અથવા નાનો video પસંદ કરો."))};
-    tx.onabort=()=>{db.close();reject(new Error("Video storage operation રદ થયું."))};
-  });
-}
-async function getVideoBlob(key){
-  if(!key)return null;
-  const db=await openMediaDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(VIDEO_STORE,"readonly"),req=tx.objectStore(VIDEO_STORE).get(key);
-    req.onsuccess=()=>{const value=req.result;db.close();resolve(value||null)};
-    req.onerror=()=>{db.close();reject(new Error("સેવ થયેલો Video વાંચી શકાયો નથી."))};
-  });
-}
-async function deleteVideoBlob(key){
-  if(!key)return;
-  try{const db=await openMediaDB();await new Promise((resolve,reject)=>{
-    const tx=db.transaction(VIDEO_STORE,"readwrite");tx.objectStore(VIDEO_STORE).delete(key);
-    tx.oncomplete=resolve;tx.onerror=reject;tx.onabort=reject;
-  });db.close()}catch(err){console.warn("Video cleanup failed",err)}
-}
-async function clearVideoBlobs(){
-  try{const db=await openMediaDB();await new Promise((resolve,reject)=>{
-    const tx=db.transaction(VIDEO_STORE,"readwrite");tx.objectStore(VIDEO_STORE).clear();
-    tx.oncomplete=resolve;tx.onerror=reject;tx.onabort=reject;
-  });db.close()}catch(err){console.warn("Video cleanup failed",err)}
-}
-function validateVideoDuration(file){
-  return new Promise((resolve,reject)=>{
-    if(!file)return resolve(true);
-    const url=URL.createObjectURL(file),video=document.createElement("video");
-    video.preload="metadata";
-    video.onloadedmetadata=()=>{
-      const duration=video.duration;URL.revokeObjectURL(url);
-      if(!Number.isFinite(duration)){reject(new Error("Video ની duration વાંચી શકાઈ નથી."));return}
-      if(duration<1 || duration>35){
-        reject(new Error("Video 1 થી 35 સેકન્ડનો હોવો જોઈએ."));
-        return;
-      }
-      resolve(true);
-    };
-    video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("આ Video file ખોલી શકાતી નથી. બીજો MP4 video પસંદ કરો."))};
-    video.src=url;
-  });
-}
-function persist(){
-  try{
-    localStorage.setItem(KEYS.wishes,JSON.stringify(wishes));
-    localStorage.setItem(KEYS.reactions,JSON.stringify(reactions));
-    localStorage.setItem(KEYS.visits,JSON.stringify(visits));
-    localStorage.setItem(KEYS.festivals,JSON.stringify(customFestivals));
-    return true;
-  }catch(err){console.error(err);setStatus("Storage ભરાઈ ગયું છે. નાની media file પસંદ કરો અથવા જૂની entries દૂર કરો.");return false}
-}
+let language=localStorage.getItem("rwm_language")||"gu";
+let wishes=[],reactions=[],visits=[],customFestivals=[];
+let currentId=new URLSearchParams(location.search).get("wish");
+let startedAt=Date.now(),visibleSince=document.visibilityState==="visible"?Date.now():null;
+let activeSeconds=0,completionRecorded=false;
+const sessionId="s"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const VIDEO_DB_NAME="ronakWishMakerMedia",VIDEO_STORE="videos";
+let auth=null,db=null,storage=null,currentUser=null,isAdmin=false;
+function safeRead(key,fallback){try{const v=JSON.parse(localStorage.getItem(key));return Array.isArray(v)?v:fallback}catch{return fallback}}
 function setStatus(message){const el=$("adminStatus");if(el)el.textContent=message}
 function makeId(){return "w"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function escapeHtml(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function openMediaDB(){return new Promise((resolve,reject)=>{if(!("indexedDB"in window)){reject(new Error("આ browser માં IndexedDB ઉપલબ્ધ નથી."));return}const r=indexedDB.open(VIDEO_DB_NAME,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(VIDEO_STORE))r.result.createObjectStore(VIDEO_STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(new Error("Video storage ખોલી શકાયું નથી."))})}
+async function saveVideoBlob(key,blob){const d=await openMediaDB();return new Promise((resolve,reject)=>{const t=d.transaction(VIDEO_STORE,"readwrite");t.objectStore(VIDEO_STORE).put(blob,key);t.oncomplete=()=>{d.close();resolve(true)};t.onerror=()=>{d.close();reject(new Error("Video local cache માં સેવ ન થયો."))}})}
+async function getVideoBlob(key){if(!key)return null;const d=await openMediaDB();return new Promise((resolve,reject)=>{const t=d.transaction(VIDEO_STORE,"readonly"),r=t.objectStore(VIDEO_STORE).get(key);r.onsuccess=()=>{const v=r.result;d.close();resolve(v||null)};r.onerror=()=>{d.close();reject(r.error)}})}
+async function deleteVideoBlob(key){if(!key)return;try{const d=await openMediaDB();await new Promise((resolve,reject)=>{const t=d.transaction(VIDEO_STORE,"readwrite");t.objectStore(VIDEO_STORE).delete(key);t.oncomplete=resolve;t.onerror=reject});d.close()}catch(e){console.warn(e)}}
+async function clearVideoBlobs(){try{const d=await openMediaDB();await new Promise((resolve,reject)=>{const t=d.transaction(VIDEO_STORE,"readwrite");t.objectStore(VIDEO_STORE).clear();t.oncomplete=resolve;t.onerror=reject});d.close()}catch(e){console.warn(e)}}
+function validateVideoDuration(file){return new Promise((resolve,reject)=>{if(!file)return resolve(true);const url=URL.createObjectURL(file),v=document.createElement("video");v.preload="metadata";v.onloadedmetadata=()=>{const d=v.duration;URL.revokeObjectURL(url);if(!Number.isFinite(d)){reject(new Error("Video ની duration વાંચી શકાતી નથી."));return}if(d<1||d>35){reject(new Error("Video 1 થી 35 સેકન્ડનો હોવો જોઈએ."));return}resolve(true)};v.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("આ Video file ખોલી શકાતી નથી. બીજો MP4 video પસંદ કરો."))};v.src=url})}
 function allFestivals(){return [...new Set([...baseFestivals,...customFestivals])].sort((a,b)=>a.localeCompare(b))}
-function fillFestivalList(filter=""){
-  const select=$("festival"), previous=select.value;
-  const list=allFestivals().filter(name=>name.toLowerCase().includes(filter.toLowerCase()));
-  select.replaceChildren();
-  list.forEach(name=>{const option=document.createElement("option");option.value=name;option.textContent=name;select.append(option)});
-  if(list.includes(previous))select.value=previous;
-  else if(list.length)select.selectedIndex=0;
-}
-function translate(){
-  document.documentElement.lang=language;
-  document.querySelectorAll("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;if(translations[language][key])el.textContent=translations[language][key]});
-  $("languageToggle").textContent=language==="gu"?"English":"ગુજરાતી";
-  $("person").placeholder=language==="gu"?"જેમ કે Rahul":"e.g. Rahul";
-  $("festivalSearch").placeholder=language==="gu"?"Festival શોધો...":"Search festivals...";
-  $("customFestivalName").placeholder=language==="gu"?"નવા Festival નું નામ":"New festival name";
-  $("visitorName").placeholder=language==="gu"?"તમારું નામ લખો":"Enter your name";
-}
-function applyTheme(theme){
-  const hero=$("wishView");hero.classList.remove("theme-festive","theme-minimal","theme-dark");
-  if(theme==="festive")hero.classList.add("theme-festive");
-  if(theme==="minimal")hero.classList.add("theme-minimal");
-  if(theme==="dark")hero.classList.add("theme-dark");
-  $("templateLabel").textContent=({royal:"Royal Gold",festive:"Colorful Festival",minimal:"Modern Minimal",dark:"Premium Dark"})[theme]||"Royal Gold";
-}
+function fillFestivalList(filter=""){const s=$("festival"),p=s.value,list=allFestivals().filter(n=>n.toLowerCase().includes(filter.toLowerCase()));s.replaceChildren();list.forEach(n=>{const o=document.createElement("option");o.value=n;o.textContent=n;s.append(o)});if(list.includes(p))s.value=p;else if(list.length)s.selectedIndex=0}
+function translate(){document.documentElement.lang=language;document.querySelectorAll("[data-i18n]").forEach(e=>{const k=e.dataset.i18n;if(translations[language][k])e.textContent=translations[language][k]});$("languageToggle").textContent=language==="gu"?"English":"ગુજરાતી";$("person").placeholder=language==="gu"?"જેમ કે Rahul":"e.g. Rahul";$("festivalSearch").placeholder=language==="gu"?"Festival શોધો...":"Search festivals...";$("customFestivalName").placeholder=language==="gu"?"નવા Festival નું નામ":"New festival name";$("visitorName").placeholder=language==="gu"?"તમારું નામ લખો":"Enter your name"}
+function applyTheme(theme){const h=$("wishView");h.classList.remove("theme-festive","theme-minimal","theme-dark");if(theme==="festive")h.classList.add("theme-festive");if(theme==="minimal")h.classList.add("theme-minimal");if(theme==="dark")h.classList.add("theme-dark");$("templateLabel").textContent=({royal:"Royal Gold",festive:"Colorful Festival",minimal:"Modern Minimal",dark:"Premium Dark"})[theme]||"Royal Gold"}
 function currentWish(){return wishes.find(w=>w.id===currentId)}
-function renderWish(){
-  const wish=currentWish();
-  if(!wish){$("festivalLabel").textContent="FESTIVE GREETINGS";$("wishTitle").textContent="શુભ દિવાળી!";$("wishName").textContent="તમને અને તમારા પરિવારને";$("wishMessage").textContent="આ તહેવાર તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.";return}
-  $("festivalLabel").textContent=wish.festival.toUpperCase();
-  $("wishTitle").textContent=wish.title;$("wishName").textContent=wish.person;$("wishMessage").textContent=wish.message;
-  $("wishAudio").hidden=!wish.audio;$("wishAudio").src=wish.audio||"";
-  const videoEl=$("wishVideo");
-  videoEl.hidden=!(wish.videoKey||wish.video);
-  if(videoEl.dataset.objectUrl){URL.revokeObjectURL(videoEl.dataset.objectUrl);delete videoEl.dataset.objectUrl}
-  if(wish.videoKey){
-    getVideoBlob(wish.videoKey).then(blob=>{
-      if(!blob){videoEl.hidden=true;setStatus("સેવ થયેલો Video મળ્યો નથી. ફરી Upload કરો.");return}
-      const objectUrl=URL.createObjectURL(blob);videoEl.dataset.objectUrl=objectUrl;videoEl.src=objectUrl;videoEl.load();
-    }).catch(err=>{videoEl.hidden=true;setStatus(err.message)});
-  }else videoEl.src=wish.video||"";
-  if(wish.image){$("wishView").style.backgroundImage=`linear-gradient(#160f0d99,#160f0d99),url("${wish.image}")`;$("wishView").style.backgroundSize="cover";$("wishView").style.backgroundPosition="center"}
-  else $("wishView").style.backgroundImage="";
-  applyTheme(wish.theme||"royal");
-  if(!completionRecorded){recordVisit("open");completionRecorded=true}
-}
-function recordVisit(type){
-  const wish=currentWish();if(!wish)return;
-  const existing=visits.find(v=>v.session===sessionId);
-  if(type==="open"&&!existing){visits.push({session:sessionId,person:wish.person,title:wish.title,at:new Date().toLocaleString(),seconds:0,completed:false})}
-  const entry=visits.find(v=>v.session===sessionId);
-  if(entry){entry.seconds=activeSeconds;entry.completed=entry.completed||type==="complete";persist()}
-}
-const sessionId=makeId();
-function renderAdmin(){
-  $("wishList").innerHTML=wishes.map(w=>`<div class="item"><div><b>${escapeHtml(w.person)}</b><small>${escapeHtml(w.festival)} · ${escapeHtml(w.title)}</small></div><div class="item-actions"><button type="button" data-copy="${escapeHtml(w.id)}">Copy link</button><button type="button" class="outline" data-edit="${escapeHtml(w.id)}">Edit</button><button type="button" class="outline" data-del="${escapeHtml(w.id)}">Delete</button></div></div>`).join("")||"<p>હજુ કોઈ Wish નથી.</p>";
-  $("reactionList").innerHTML=reactions.slice().reverse().map(r=>`<div class="item"><b>${escapeHtml(r.name)}</b><span>${escapeHtml(r.emoji)} · ${escapeHtml(r.person)} · ${escapeHtml(r.at)}</span></div>`).join("")||"<p>હજુ કોઈ reaction નથી.</p>";
-  $("visitList").innerHTML=visits.slice().reverse().map(v=>`<div class="item"><div><b>${escapeHtml(v.person)}</b><small>${escapeHtml(v.title)} · ${escapeHtml(v.at)}</small></div><span>${Math.max(0,Number(v.seconds)||0)} sec · ${v.completed?"Completed":"Opened"}</span></div>`).join("")||"<p>હજુ કોઈ visit નથી.</p>";
-}
-function fileAsDataUrl(file,maxBytes,label){
-  return new Promise((resolve,reject)=>{
-    if(!file)return resolve("");
-    if(file.size>maxBytes){reject(new Error(`${label} file limit ${Math.round(maxBytes/1024/1024)} MB છે.`));return}
-    const reader=new FileReader();reader.onerror=()=>reject(new Error(`${label} વાંચી શકાયી નથી.`));reader.onload=()=>resolve(String(reader.result));reader.readAsDataURL(file);
-  });
-}
-async function saveWish(){
-  const person=$("person").value.trim();
-  if(!person){setStatus("પહેલાં વ્યક્તિનું નામ લખો.");$("person").focus();return}
-  const festival=$("festival").value;if(!festival){setStatus("Festival પસંદ કરો.");return}
-  const button=$("saveWish");button.disabled=true;setStatus("Wish સેવ થઈ રહી છે...");
-  try{
-    const editId=$("editingId")?.value;const id=editId||makeId();const old=wishes.find(w=>w.id===id)||{};
-    const videoFile=$("videoFile").files[0];
-    if(videoFile && videoFile.size>50*1024*1024)throw new Error("Video file limit 50 MB છે.");
-    if(videoFile)await validateVideoDuration(videoFile);
-    const [audio,image]=await Promise.all([
-      fileAsDataUrl($("audioFile").files[0],2*1024*1024,"Audio"),
-      fileAsDataUrl($("imageFile").files[0],4*1024*1024,"Image")
-    ]);
-    const newVideoKey=videoFile?("video_"+id+"_"+Date.now()):"";
-    if(videoFile)await saveVideoBlob(newVideoKey,videoFile);
-    const wish={id,person,festival,title:$("titleInput").value.trim()||"શુભેચ્છાઓ!",message:$("messageInput").value.trim(),audio:audio||old.audio||"",video:"",videoKey:newVideoKey||old.videoKey||"",image:image||old.image||"",theme:$("templateSelect").value,updatedAt:new Date().toISOString()};
-    if(!videoFile && old.video && !old.videoKey)wish.video=old.video;
-    wishes=wishes.filter(w=>w.id!==id);wishes.unshift(wish);
-    if(!persist()){
-      wishes=wishes.filter(w=>w.id!==id);if(old.id)wishes.push(old);
-      if(newVideoKey)await deleteVideoBlob(newVideoKey);
-      return;
-    }
-    if(videoFile&&old.videoKey)await deleteVideoBlob(old.videoKey);
-    currentId=id;history.replaceState(null,"",location.pathname+"?wish="+encodeURIComponent(id));
-    $("editingId")?.remove();renderWish();renderAdmin();setStatus("Wish સફળતાપૂર્વક સેવ થઈ ગઈ. આ demo માં link આ જ browser/device ના data પર આધારિત છે.");
-  }catch(err){console.error(err);setStatus(err.message||"Wish સેવ કરતી વખતે ભૂલ આવી. ફરી પ્રયાસ કરો.")}
-  finally{button.disabled=false}
-}
-function resetForm(){
-  ["person","titleInput","messageInput","audioFile","videoFile","imageFile"].forEach(id=>$(id).value="");
-  $("titleInput").value="શુભેચ્છાઓ!";$("festivalSearch").value="";fillFestivalList();$("templateSelect").value="royal";$("editingId")?.remove();setStatus("નવી Wish માટે ફોર્મ તૈયાર છે.");
-}
-$("adminToggle").addEventListener("click",()=>{$("adminView").hidden=false;renderAdmin();$("adminView").scrollIntoView({behavior:"smooth",block:"start"})});
-$("closeAdmin").addEventListener("click",()=>{$("adminView").hidden=true});
-$("saveWish").addEventListener("click",saveWish);
-$("newWish").addEventListener("click",resetForm);
-$("festivalSearch").addEventListener("input",e=>fillFestivalList(e.target.value));
-$("addFestival").addEventListener("click",()=>{
-  const name=$("customFestivalName").value.trim();if(!name){setStatus("Custom Festival નું નામ લખો.");return}
-  if(allFestivals().some(x=>x.toLowerCase()===name.toLowerCase())){setStatus("આ Festival પહેલેથી યાદીમાં છે.");return}
-  customFestivals.push(name);if(!persist())return;$("customFestivalName").value="";$("festivalSearch").value="";fillFestivalList();$("festival").value=name;setStatus("Custom Festival ઉમેરાયો.");
-});
-$("wishList").addEventListener("click",async e=>{
-  const button=e.target.closest("button");if(!button)return;
-  const id=button.dataset.copy||button.dataset.edit||button.dataset.del;if(!id)return;
-  const wish=wishes.find(w=>w.id===id);if(!wish)return;
-  if(button.dataset.copy!==undefined){
-    const url=location.origin+location.pathname+"?wish="+encodeURIComponent(id);
-    try{await navigator.clipboard.writeText(url);setStatus("Wish link copy થઈ ગઈ. નોંધ: અન્ય device પર જોવા માટે cloud backend જરૂરી છે.")}
-    catch{window.prompt("આ link copy કરો:",url)}return;
-  }
-  if(button.dataset.del!==undefined){if(!confirm("આ Wish delete કરવી છે?"))return;wishes=wishes.filter(w=>w.id!==id);persist();if(wish.videoKey)await deleteVideoBlob(wish.videoKey);renderAdmin();setStatus("Wish delete થઈ ગઈ.");return}
-  if(button.dataset.edit!==undefined){
-    $("person").value=wish.person;$("festivalSearch").value="";fillFestivalList();$("festival").value=wish.festival;
-    $("titleInput").value=wish.title;$("messageInput").value=wish.message;$("templateSelect").value=wish.theme||"royal";
-    $("editingId")?.remove();const hidden=document.createElement("input");hidden.type="hidden";hidden.id="editingId";hidden.value=wish.id;$("saveWish").after(hidden);
-    $("adminView").scrollIntoView({behavior:"smooth",block:"start"});setStatus("Wish edit કરવા માટે તૈયાર છે.");
-  }
-});
-$("reactions").addEventListener("click",e=>{
-  const button=e.target.closest("button[data-emoji]");if(!button)return;
-  const name=$("visitorName").value.trim();if(!name){$("thanksStatus").textContent=language==="gu"?"પહેલાં તમારું નામ લખો.":"Please enter your name first."; $("visitorName").focus();return}
-  const wish=currentWish();reactions.push({name,emoji:button.dataset.emoji,person:wish?.person||"Demo Wish",at:new Date().toLocaleString()});persist();
-  $("thanksStatus").textContent=(language==="gu"?"તમારો આભાર! ":"Thank you! ")+button.dataset.emoji;
-});
-$("languageToggle").addEventListener("click",()=>{language=language==="gu"?"en":"gu";localStorage.setItem("rwm_language",language);translate()});
-$("templateSelect").addEventListener("change",e=>applyTheme(e.target.value));
-$("clearLocalData").addEventListener("click",async()=>{
-  if(!confirm("બધી Wishes, Reactions, Visits અને Custom Festivals આ browser માંથી delete કરવી છે?"))return;
-  wishes=[];reactions=[];visits=[];customFestivals=[];persist();await clearVideoBlobs();currentId=null;history.replaceState(null,"",location.pathname);renderWish();renderAdmin();resetForm();setStatus("Local data સાફ થઈ ગયો.");
-});
-document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="hidden"){if(visibleSince){activeSeconds+=Math.round((Date.now()-visibleSince)/1000);visibleSince=null}recordVisit("update")}
-  else visibleSince=Date.now();
-});
-window.addEventListener("pagehide",()=>{if(visibleSince){activeSeconds+=Math.round((Date.now()-visibleSince)/1000);visibleSince=null}recordVisit("update")});
-window.addEventListener("scroll",()=>{
-  if(completionRecorded&&window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-40)recordVisit("complete");
-},{passive:true});
-fillFestivalList();translate();renderWish();
+function renderWish(){const w=currentWish();if(!w){$("festivalLabel").textContent="FESTIVE GREETINGS";$("wishTitle").textContent="શુભ દિવાળી!";$("wishName").textContent="તમને અને તમારા પરિવારને";$("wishMessage").textContent="આ તહેવાર તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.";return}
+$("festivalLabel").textContent=(w.festival||"").toUpperCase();$("wishTitle").textContent=w.title||"";$("wishName").textContent=w.person||"";$("wishMessage").textContent=w.message||"";$("wishAudio").hidden=!w.audio;$("wishAudio").src=w.audio||"";const ve=$("wishVideo");ve.hidden=!(w.videoUrl||w.videoKey||w.video);if(ve.dataset.objectUrl){URL.revokeObjectURL(ve.dataset.objectUrl);delete ve.dataset.objectUrl}
+if(w.videoUrl)ve.src=w.videoUrl;else if(w.videoKey)getVideoBlob(w.videoKey).then(b=>{if(b){const u=URL.createObjectURL(b);ve.dataset.objectUrl=u;ve.src=u}});else ve.src=w.video||"";
+if(w.imageUrl||w.image){$("wishView").style.backgroundImage=`linear-gradient(#160f0d99,#160f0d99),url("${w.imageUrl||w.image}")`;$("wishView").style.backgroundSize="cover";$("wishView").style.backgroundPosition="center"}else $("wishView").style.backgroundImage="";
+applyTheme(w.theme||"royal");if(!completionRecorded){recordVisit("open");completionRecorded=true}}
+async function recordVisit(type){const w=currentWish();if(!w||!db)return;try{const ref=db.collection("Visits").doc(sessionId);await ref.set({person:w.person||"",wishId:w.id,title:w.title||"",seconds:activeSeconds,completed:type==="complete",updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}catch(e){console.warn("Visit sync",e)}}
+function renderAdmin(){$("wishList").innerHTML=wishes.map(w=>`<div class="item"><div><b>${escapeHtml(w.person)}</b><small>${escapeHtml(w.festival)} · ${escapeHtml(w.title)}</small></div><div class="item-actions"><button type="button" data-copy="${escapeHtml(w.id)}">Copy link</button><button type="button" class="outline" data-edit="${escapeHtml(w.id)}">Edit</button><button type="button" class="outline" data-del="${escapeHtml(w.id)}">Delete</button></div></div>`).join("")||"<p>હજુ કોઈ Wish નથી.</p>";$("reactionList").innerHTML=reactions.slice().reverse().map(r=>`<div class="item"><b>${escapeHtml(r.name)}</b><span>${escapeHtml(r.emoji)} · ${escapeHtml(r.person)} · ${escapeHtml(r.at||"")}</span></div>`).join("")||"<p>હજુ કોઈ reaction નથી.</p>";$("visitList").innerHTML=visits.slice().reverse().map(v=>`<div class="item"><div><b>${escapeHtml(v.person)}</b><small>${escapeHtml(v.title)} · ${escapeHtml(v.at||"")}</small></div><span>${Math.max(0,Number(v.seconds)||0)} sec · ${v.completed?"Completed":"Opened"}</span></div>`).join("")||"<p>હજુ કોઈ visit નથી.</p>"}
+async function loadCloudData(){if(!db)return;const [wishSnap,festivalSnap]=await Promise.all([db.collection("Wishes").get(),db.collection("CustomFestivals").get()]);wishes=wishSnap.docs.map(d=>({id:d.id,...d.data()}));customFestivals=festivalSnap.docs.map(d=>d.data().name).filter(n=>typeof n==="string"&&n.trim());if(currentId&&!wishes.some(w=>w.id===currentId))currentId=null;if(!currentId&&wishes.length)currentId=wishes[0].id;fillFestivalList($("festivalSearch")?.value||"");
+if(isAdmin){const [rs,vs]=await Promise.all([db.collection("Reactions").orderBy("createdAt","desc").limit(200).get(),db.collection("Visits").orderBy("updatedAt","desc").limit(200).get()]);reactions=rs.docs.map(d=>d.data());visits=vs.docs.map(d=>d.data())}renderWish();renderAdmin()}
+async function uploadMedia(file,folder){if(!file)return "";const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const ref=storage.ref(`${folder}/${Date.now()}_${safe}`);await ref.put(file);return await ref.getDownloadURL()}
+function requireAdmin(){if(!isAdmin){setStatus("Admin Login કર્યા પછી જ આ કામ કરી શકાશે.");return false}return true}
+async function saveWish(){if(!requireAdmin())return;const person=$("person").value.trim();if(!person){setStatus("પહેલાં વ્યક્તિનું નામ લખો.");$("person").focus();return}const festival=$("festival").value;if(!festival){setStatus("Festival પસંદ કરો.");return}const button=$("saveWish");button.disabled=true;setStatus("Firebase માં Wish સેવ થઈ રહી છે...");
+try{const editId=$("editingId")?.value,id=editId||makeId(),old=wishes.find(w=>w.id===id)||{},vf=$("videoFile").files[0],af=$("audioFile").files[0],imf=$("imageFile").files[0];if(vf&&vf.size>50*1024*1024)throw new Error("Video file limit 50 MB છે.");if(vf)await validateVideoDuration(vf);if(af&&af.size>2*1024*1024)throw new Error("Audio file limit 2 MB છે.");if(imf&&imf.size>4*1024*1024)throw new Error("Image file limit 4 MB છે.");
+const [audioUrl,imageUrl,videoUrl]=await Promise.all([uploadMedia(af,"audio"),uploadMedia(imf,"images"),uploadMedia(vf,"videos")]);
+const w={id,person,festival,title:$("titleInput").value.trim()||"શુભેચ્છાઓ!",message:$("messageInput").value.trim(),audio:audioUrl||old.audio||"",videoUrl:videoUrl||old.videoUrl||"",imageUrl:imageUrl||old.imageUrl||"",theme:$("templateSelect").value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+await db.collection("Wishes").doc(id).set(w,{merge:true});wishes=wishes.filter(x=>x.id!==id);wishes.unshift({...w,updatedAt:new Date().toISOString()});$("editingId")?.remove();currentId=id;history.replaceState(null,"",location.pathname+"?wish="+encodeURIComponent(id));renderWish();renderAdmin();setStatus("Wish Firebase માં સેવ થઈ ગઈ!")}catch(e){console.error(e);setStatus(e.message||"Wish સેવ કરવામાં ભૂલ આવી.")}finally{button.disabled=false}}
+function resetForm(){["person","titleInput","messageInput","audioFile","videoFile","imageFile"].forEach(id=>$(id).value="");$("titleInput").value="શુભેચ્છાઓ!";$("festivalSearch").value="";fillFestivalList();$("templateSelect").value="royal";$("editingId")?.remove();setStatus("નવી Wish માટે ફોર્મ તૈયાર છે.")}
+async function adminLogin(){const email=$("adminEmail").value.trim(),password=$("adminPassword").value;if(!email||!password){$("loginStatus").textContent="Email અને Password લખો.";return}try{await auth.signInWithEmailAndPassword(email,password)}catch(e){$("loginStatus").textContent="Login ન થયું: "+e.message}}
+async function adminLogout(){try{await auth.signOut()}catch(e){console.error(e)}}
+function setAdminUI(){const box=$("adminLoginBox");if(box)box.hidden=isAdmin;const logout=$("adminLogout");if(logout)logout.hidden=!isAdmin;const toggle=$("adminToggle");if(toggle)toggle.disabled=false;if(!isAdmin)$("adminView").hidden=true}
+function initFirebase(){if(!window.firebase||!window.firebaseConfig){setStatus("Firebase config લોડ થયું નથી.");return}firebase.initializeApp(window.firebaseConfig);auth=firebase.auth();db=firebase.firestore();storage=firebase.storage();auth.onAuthStateChanged(async user=>{currentUser=user;isAdmin=false;if(user){try{const doc=await db.collection("admins").doc(user.uid).get();isAdmin=doc.exists&&doc.data().role==="admin"}catch(e){console.error(e)}}setAdminUI();if(isAdmin){$("loginStatus").textContent="Admin Login સફળ થયું.";try{await loadCloudData()}catch(e){setStatus("Firebase data load ભૂલ: "+e.message)}}else{try{await loadCloudData()}catch(e){setStatus("Wishes load ન થઈ: "+e.message)}}})}
+$("adminToggle").addEventListener("click",()=>{if(!isAdmin){$("adminLoginBox").hidden=false;$("adminLoginBox").scrollIntoView({behavior:"smooth"});return}$("adminView").hidden=false;renderAdmin();$("adminView").scrollIntoView({behavior:"smooth",block:"start"})});
+$("closeAdmin").addEventListener("click",()=>$("adminView").hidden=true);$("saveWish").addEventListener("click",saveWish);$("newWish").addEventListener("click",resetForm);
+$("adminLoginButton").addEventListener("click",adminLogin);$("adminLogout").addEventListener("click",adminLogout);$("festivalSearch").addEventListener("input",e=>fillFestivalList(e.target.value));
+$("addFestival").addEventListener("click",async()=>{if(!requireAdmin())return;const n=$("customFestivalName").value.trim();if(!n){setStatus("Custom Festival નું નામ લખો.");return}if(allFestivals().some(x=>x.toLowerCase()===n.toLowerCase())){setStatus("આ Festival પહેલેથી યાદીમાં છે.");return}try{await db.collection("CustomFestivals").doc(encodeURIComponent(n)).set({name:n});customFestivals.push(n);$("customFestivalName").value="";fillFestivalList();$("festival").value=n;setStatus("Custom Festival ઉમેરાયો.")}catch(e){setStatus("Festival સેવ ન થયો: "+e.message)}});
+$("wishList").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const id=b.dataset.copy||b.dataset.edit||b.dataset.del,w=wishes.find(x=>x.id===id);if(!w)return;if(b.dataset.copy!==undefined){const url=location.origin+location.pathname+"?wish="+encodeURIComponent(id);try{await navigator.clipboard.writeText(url);setStatus("Wish link copy થઈ ગઈ.")}catch{prompt("આ link copy કરો:",url)}return}if(!requireAdmin())return;if(b.dataset.del!==undefined){if(!confirm("આ Wish delete કરવી છે?"))return;try{await db.collection("Wishes").doc(id).delete();wishes=wishes.filter(x=>x.id!==id);renderAdmin();renderWish();setStatus("Wish delete થઈ ગઈ.")}catch(e){setStatus("Delete ન થયું: "+e.message)}return}if(b.dataset.edit!==undefined){$("person").value=w.person||"";$("festivalSearch").value="";fillFestivalList();$("festival").value=w.festival||"";$("titleInput").value=w.title||"";$("messageInput").value=w.message||"";$("templateSelect").value=w.theme||"royal";$("editingId")?.remove();const h=document.createElement("input");h.type="hidden";h.id="editingId";h.value=w.id;$("saveWish").after(h);$("adminView").scrollIntoView({behavior:"smooth"});setStatus("Wish edit કરવા માટે તૈયાર છે.")}});
+$("reactions").addEventListener("click",async e=>{const b=e.target.closest("button[data-emoji]");if(!b)return;const name=$("visitorName").value.trim();if(!name){$("thanksStatus").textContent=language==="gu"?"પહેલાં તમારું નામ લખો.":"Please enter your name first."; $("visitorName").focus();return}const w=currentWish();try{await db.collection("Reactions").add({name,emoji:b.dataset.emoji,person:w?.person||"Demo Wish",wishId:w?.id||"",createdAt:firebase.firestore.FieldValue.serverTimestamp()});$("thanksStatus").textContent=(language==="gu"?"તમારો આભાર! ":"Thank you! ")+b.dataset.emoji;if(isAdmin){const s=await db.collection("Reactions").orderBy("createdAt","desc").limit(200).get();reactions=s.docs.map(d=>d.data());renderAdmin()}}catch(err){$("thanksStatus").textContent="Reaction સેવ ન થઈ: "+err.message}});
+$("languageToggle").addEventListener("click",()=>{language=language==="gu"?"en":"gu";localStorage.setItem("rwm_language",language);translate()});$("templateSelect").addEventListener("change",e=>applyTheme(e.target.value));
+$("clearLocalData").addEventListener("click",async()=>{if(!requireAdmin())return;if(!confirm("ફક્ત આ browser માં સાચવાયેલ language preference અને local video cache સાફ કરવી છે? Firebase Wishes delete નહીં થાય."))return;try{localStorage.removeItem(KEYS.wishes);localStorage.removeItem(KEYS.reactions);localStorage.removeItem(KEYS.visits);localStorage.removeItem(KEYS.festivals);localStorage.removeItem("rwm_language");await clearVideoBlobs();setStatus("આ browser નો local cache સાફ થયો. Firebase Wishes સુરક્ષિત છે.")}catch(e){setStatus("Local data સાફ ન થયો: "+e.message)}});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"){if(visibleSince){activeSeconds+=Math.round((Date.now()-visibleSince)/1000);visibleSince=null}recordVisit("update")}else visibleSince=Date.now()});window.addEventListener("pagehide",()=>{if(visibleSince){activeSeconds+=Math.round((Date.now()-visibleSince)/1000);visibleSince=null}recordVisit("update")});window.addEventListener("scroll",()=>{if(completionRecorded&&window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-40)recordVisit("complete")},{passive:true});
+fillFestivalList();translate();initFirebase();
 })();
