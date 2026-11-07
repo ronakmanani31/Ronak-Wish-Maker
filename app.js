@@ -9,7 +9,7 @@ const translations = {
 gu:{admin:"Admin",wishLike:"તમને આ Wish ગમી?",dashboard:"Admin Dashboard",close:"બંધ કરો",localNotice:"આ build માં માહિતી આ જ browser/device માં સેવ થાય છે. બીજા device પર share અને સાચી Admin સુરક્ષા માટે Firebase/backend setup જરૂરી છે.",createWish:"નવી Wish બનાવો",personName:"વ્યક્તિનું નામ",festival:"Festival",wishTitle:"Wish Title",wishMessage:"Wish Message",template:"Design Theme",customFestival:"Custom Festival ઉમેરો",music:"ગીત (Audio)",video:"વિડિયો (Video)",background:"Background Image",saveWish:"Save / Create Wish",new:"નવી",yourWishes:"તમારી Wishes",reactions:"Thank You Reactions",visitorActivity:"Visitor Activity",analyticsNotice:"Visitor સમય browser અંદાજ છે. સાચા multi-device analytics અને consent management માટે backend જરૂરી છે.",clearData:"Local Data સાફ કરો"},
 en:{admin:"Admin",wishLike:"Did you like this wish?",dashboard:"Admin Dashboard",close:"Close",localNotice:"This build stores data only in this browser/device. Firebase/backend is required for sharing across devices and real admin security.",createWish:"Create New Wish",personName:"Person's name",festival:"Festival",wishTitle:"Wish title",wishMessage:"Wish message",template:"Design theme",customFestival:"Add custom festival",music:"Music (Audio)",video:"Video clip",background:"Background image",saveWish:"Save / Create Wish",new:"New",yourWishes:"Your Wishes",reactions:"Thank You Reactions",visitorActivity:"Visitor Activity",analyticsNotice:"Visitor time is an approximate browser measurement. Backend is required for multi-device analytics and consent management.",clearData:"Clear local data"}
 };
-let language = localStorage.getItem("rwm_language") || "gu";
+let language = safeGet("rwm_language") || "gu";
 let wishes = safeRead(KEYS.wishes, []);
 let reactions = safeRead(KEYS.reactions, []);
 let visits = safeRead(KEYS.visits, []);
@@ -18,13 +18,18 @@ let currentId = new URLSearchParams(location.search).get("wish");
 let startedAt = Date.now(), visibleSince = document.visibilityState === "visible" ? Date.now() : null;
 let activeSeconds = 0, completionRecorded = false;
 
-function safeRead(key, fallback){try{const value=JSON.parse(localStorage.getItem(key));return Array.isArray(value)?value:fallback}catch{return fallback}}
+function safeGet(key){try{return localStorage.getItem(key)}catch(err){console.warn("Storage read unavailable",err);return null}}
+function safeSet(key,value){try{localStorage.setItem(key,value);return true}catch(err){console.error(err);return false}}
+function safeRead(key, fallback){try{const value=JSON.parse(safeGet(key));return Array.isArray(value)?value:fallback}catch{return fallback}}
 function persist(){
   try{
-    localStorage.setItem(KEYS.wishes,JSON.stringify(wishes));
-    localStorage.setItem(KEYS.reactions,JSON.stringify(reactions));
-    localStorage.setItem(KEYS.visits,JSON.stringify(visits));
-    localStorage.setItem(KEYS.festivals,JSON.stringify(customFestivals));
+    const snapshot = [
+      [KEYS.wishes, wishes], [KEYS.reactions, reactions],
+      [KEYS.visits, visits], [KEYS.festivals, customFestivals]
+    ];
+    for (const [key,value] of snapshot) {
+      if (!safeSet(key, JSON.stringify(value))) throw new Error("Browser storage ઉપલબ્ધ નથી અથવા ભરાઈ ગયું છે. મોટા media files દૂર કરીને ફરી પ્રયાસ કરો.");
+    }
     return true;
   }catch(err){console.error(err);setStatus("Storage ભરાઈ ગયું છે. નાની media file પસંદ કરો અથવા જૂની entries દૂર કરો.");return false}
 }
@@ -61,12 +66,11 @@ function renderWish(){
   const wish=currentWish();
   if(!wish){
     $("festivalLabel").textContent="FESTIVE GREETINGS";
-    $("templateLabel").textContent="Royal Gold";
     $("wishTitle").textContent="શુભ દિવાળી!";
     $("wishName").textContent="તમને અને તમારા પરિવારને";
     $("wishMessage").textContent="આ તહેવાર તમારા જીવનમાં સુખ, શાંતિ અને સમૃદ્ધિ લાવે.";
-    $("wishAudio").hidden=true; $("wishAudio").removeAttribute("src");
-    $("wishVideo").hidden=true; $("wishVideo").removeAttribute("src");
+    $("wishAudio").hidden=true;$("wishVideo").hidden=true;
+    $("wishAudio").removeAttribute("src");$("wishVideo").removeAttribute("src");
     $("wishView").style.backgroundImage="";
     applyTheme("royal");
     return;
@@ -143,18 +147,7 @@ $("wishList").addEventListener("click",async e=>{
     try{await navigator.clipboard.writeText(url);setStatus("Wish link copy થઈ ગઈ. નોંધ: અન્ય device પર જોવા માટે cloud backend જરૂરી છે.")}
     catch{window.prompt("આ link copy કરો:",url)}return;
   }
-  if(button.dataset.del!==undefined){
-     if(!confirm("આ Wish delete કરવી છે?"))return;
-     wishes=wishes.filter(w=>w.id!==id);
-     if(!persist()){setStatus("Delete સેવ થઈ શક્યું નથી. Browser storage તપાસો.");return}
-     if(currentId===id){
-       currentId=null;
-       history.replaceState(null,"",location.pathname);
-       completionRecorded=false;
-       renderWish();
-     }
-     renderAdmin();setStatus("Wish delete થઈ ગઈ.");return
-   }
+  if(button.dataset.del!==undefined){if(!confirm("આ Wish delete કરવી છે?"))return;wishes=wishes.filter(w=>w.id!==id);persist();renderAdmin();setStatus("Wish delete થઈ ગઈ.");return}
   if(button.dataset.edit!==undefined){
     $("person").value=wish.person;$("festivalSearch").value="";fillFestivalList();$("festival").value=wish.festival;
     $("titleInput").value=wish.title;$("messageInput").value=wish.message;$("templateSelect").value=wish.theme||"royal";
@@ -168,7 +161,7 @@ $("reactions").addEventListener("click",e=>{
   const wish=currentWish();reactions.push({name,emoji:button.dataset.emoji,person:wish?.person||"Demo Wish",at:new Date().toLocaleString()});persist();
   $("thanksStatus").textContent=(language==="gu"?"તમારો આભાર! ":"Thank you! ")+button.dataset.emoji;
 });
-$("languageToggle").addEventListener("click",()=>{language=language==="gu"?"en":"gu";localStorage.setItem("rwm_language",language);translate()});
+$("languageToggle").addEventListener("click",()=>{language=language==="gu"?"en":"gu";safeSet("rwm_language",language);translate()});
 $("templateSelect").addEventListener("change",e=>applyTheme(e.target.value));
 $("clearLocalData").addEventListener("click",()=>{
   if(!confirm("બધી Wishes, Reactions, Visits અને Custom Festivals આ browser માંથી delete કરવી છે?"))return;

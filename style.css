@@ -42,3 +42,11 @@ footer{text-align:center;color:#a99573;padding:20px;font-size:13px}
 .hero.theme-minimal{background:#f6f1e8;color:#29231c;border-color:#c8bda8;box-shadow:0 16px 45px #0003}.hero.theme-minimal h1{color:#815c28;text-shadow:none}.hero.theme-minimal h2,.hero.theme-minimal>p:not(.eyebrow){color:#41382e}.hero.theme-minimal .eyebrow,.hero.theme-minimal .thanks h3{color:#815c28}
 .hero.theme-dark{background:radial-gradient(circle at 50% 0,#27334a,#111827 60%,#090d16);border-color:#627ca5}
 @media(max-width:600px){.hero{margin:16px 10px;padding:32px 15px}.panel{margin:12px 9px;padding:16px}.top{padding:12px 4%}.brand{font-size:17px}.panelHead{align-items:flex-start}.item{align-items:flex-start}}
+
+/* Mobile/browser cache-safe brand treatment */
+.top .brand,.top .brand:visited,.top .brand:hover,.top .brand:active{
+  color:#fff5dc!important;text-decoration:none!important;
+}
+.top .brand span{color:var(--gold2)!important}
+.top{flex-wrap:wrap}
+.top-actions{flex-wrap:wrap}
