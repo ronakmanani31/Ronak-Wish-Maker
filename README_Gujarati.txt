@@ -1,13 +1,18 @@
-Ronak Wish Maker – Fixed Update
-1. જૂની ત્રણેય ફાઇલોનો backup રાખો.
-2. ZIP extract કરો.
-3. index.html, style.css અને app.js ને GitHub repository માં replace કરીને Commit કરો.
-4. Website ખોલતી વખતે Chrome માં hard refresh કરો અથવા Incognito માં ચકાસો.
-5. Admin ખોલો, વ્યક્તિનું નામ લખો, Festival પસંદ કરો અને Save / Create Wish દબાવો.
-6. New દબાવવાથી form સાફ થઈ નવી Wish માટે તૈયાર થવું જોઈએ.
+Ronak Wish Maker – 50 MB Video Update
 
-મર્યાદાઓ:
-- આ build હજી local browser storage વાપરે છે; બીજા ફોનમાં Wish આપમેળે દેખાશે નહીં.
-- Admin માટે secure owner-only login હજી જોડાયેલું નથી.
-- Browser storage ભરાઈ જાય તો media file વગર અથવા નાની file સાથે ફરી save કરો.
-- Zero bug ની ખાતરી શક્ય નથી; Android પર વાસ્તવિક પરીક્ષણ જરૂરી છે.
+1. GitHub પર હાલની index.html, style.css અને app.js ની backup copy રાખો.
+2. ZIP extract કરો.
+3. ZIP માંથી આ ત્રણેય ફાઇલો GitHub repository માં replace કરો.
+4. Commit changes કરો અને GitHub Pages deploy થાય ત્યાં સુધી રાહ જુઓ.
+5. Website ને refresh કરો; જરૂર પડે તો browser માં hard refresh કરો.
+
+Video નિયમ:
+- મહત્તમ file size: 50 MB
+- ઓછામાં ઓછી duration: 30 seconds
+- Video browser ના IndexedDB માં એ જ device/browser પર સેવ થાય છે.
+- Audio 2 MB અને background image 4 MB ની હાલની limit યથાવત છે.
+
+મહત્વપૂર્ણ:
+આ update માં Video ને localStorage ના બદલે IndexedDB માં મૂક્યું છે, જેથી 50 MB video માટે localStorage quota નો પ્રશ્ન ઓછો થાય.
+આ હજી cloud storage નથી. બીજા mobile/browser માં આ Wish અને Video જોવા માટે Firebase Storage/Database જેવા backend ની જરૂર પડશે.
+JavaScript syntax check (Node.js --check) પાસ થયો છે; વાસ્તવિક Android browser માં end-to-end test હજી કરવાનું બાકી છે.

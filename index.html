@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#17120d">
   <meta name="description" content="Ronak Wish Maker - festive greetings">
   <title>Ronak Wish Maker</title>
-  <link rel="stylesheet" href="style.css?v=20261107-2">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
@@ -66,10 +66,10 @@
         </select></label>
         <label><span data-i18n="customFestival">Custom Festival ઉમેરો</span><div class="inline-field"><input id="customFestivalName" type="text" maxlength="60" placeholder="નવા Festival નું નામ"><button id="addFestival" type="button">Add</button></div></label>
         <label><span data-i18n="music">ગીત (Audio)</span><input id="audioFile" type="file" accept="audio/*"></label>
-        <label><span data-i18n="video">વિડિયો (Video)</span><input id="videoFile" type="file" accept="video/*"></label>
+        <label><span data-i18n="video">વિડિયો (Video)</span><input id="videoFile" type="file" accept="video/*"><small class="small">Video: મહત્તમ 50 MB અને ઓછામાં ઓછા 30 સેકન્ડ.</small></label>
         <label><span data-i18n="background">Background image</span><input id="imageFile" type="file" accept="image/*"></label>
       </div>
-      <p class="small">Media size limits: audio 2 MB, video 8 MB, image 4 MB. આ demo માં media browser storage માં રહે છે.</p>
+      <p class="small">Media size limits: audio 2 MB, video 50 MB (ઓછામાં ઓછા 30 સેકન્ડ), image 4 MB. Video IndexedDB માં આ browser/device પર સેવ થાય છે.</p>
       <div class="actions">
         <button id="saveWish" type="button" data-i18n="saveWish">Save / Create Wish</button>
         <button id="newWish" class="outline" type="button" data-i18n="new">New</button>
@@ -84,6 +84,6 @@
     </section>
   </main>
   <footer>Made with ❤️ by <strong>Ronak Manani</strong></footer>
-  <script src="app.js?v=20261107-2"></script>
+  <script src="app.js"></script>
 </body>
 </html>
