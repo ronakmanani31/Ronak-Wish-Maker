@@ -17,9 +17,7 @@ let customFestivals = safeRead(KEYS.festivals, []);
 let currentId = new URLSearchParams(location.search).get("wish");
 let startedAt = Date.now(), visibleSince = document.visibilityState === "visible" ? Date.now() : null;
 let activeSeconds = 0, completionRecorded = false;
-
 function safeRead(key, fallback){try{const value=JSON.parse(localStorage.getItem(key));return Array.isArray(value)?value:fallback}catch{return fallback}}
-
 const VIDEO_DB_NAME = "ronakWishMakerMedia";
 const VIDEO_STORE = "videos";
 function openMediaDB(){
@@ -63,7 +61,7 @@ async function clearVideoBlobs(){
     tx.oncomplete=resolve;tx.onerror=reject;tx.onabort=reject;
   });db.close()}catch(err){console.warn("Video cleanup failed",err)}
 }
-function validateVideoDuration(file,minSeconds=30){
+function validateVideoDuration(file){
   return new Promise((resolve,reject)=>{
     if(!file)return resolve(true);
     const url=URL.createObjectURL(file),video=document.createElement("video");
@@ -71,7 +69,10 @@ function validateVideoDuration(file,minSeconds=30){
     video.onloadedmetadata=()=>{
       const duration=video.duration;URL.revokeObjectURL(url);
       if(!Number.isFinite(duration)){reject(new Error("Video ની duration વાંચી શકાઈ નથી."));return}
-      if(duration<minSeconds){reject(new Error("Video ઓછામાં ઓછો 30 સેકન્ડનો હોવો જોઈએ."));return}
+      if(duration<1 || duration>35){
+        reject(new Error("Video 1 થી 35 સેકન્ડનો હોવો જોઈએ."));
+        return;
+      }
       resolve(true);
     };
     video.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("આ Video file ખોલી શકાતી નથી. બીજો MP4 video પસંદ કરો."))};
@@ -165,7 +166,7 @@ async function saveWish(){
     const editId=$("editingId")?.value;const id=editId||makeId();const old=wishes.find(w=>w.id===id)||{};
     const videoFile=$("videoFile").files[0];
     if(videoFile && videoFile.size>50*1024*1024)throw new Error("Video file limit 50 MB છે.");
-    if(videoFile)await validateVideoDuration(videoFile,30);
+    if(videoFile)await validateVideoDuration(videoFile);
     const [audio,image]=await Promise.all([
       fileAsDataUrl($("audioFile").files[0],2*1024*1024,"Audio"),
       fileAsDataUrl($("imageFile").files[0],4*1024*1024,"Image")
@@ -237,6 +238,5 @@ window.addEventListener("pagehide",()=>{if(visibleSince){activeSeconds+=Math.rou
 window.addEventListener("scroll",()=>{
   if(completionRecorded&&window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-40)recordVisit("complete");
 },{passive:true});
-
 fillFestivalList();translate();renderWish();
 })();
